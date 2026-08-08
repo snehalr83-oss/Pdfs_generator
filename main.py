@@ -1,58 +1,52 @@
 import os
 import streamlit as st
 
-st.set_page_config(page_title="Senior Healthcare Resource Hub", page_icon="📋", layout="wide")
+st.set_page_config(page_title="Resource Hub", page_icon="📋", layout="wide")
 
 st.title("📋 Senior Healthcare Resource Hub")
 
-# Full document list with categories
-documents = [
-    {"filename": "1_Doctor_Visit_Prep.pdf", "title": "Doctor Visit Companion", "category": "Appointments", "desc": "Organize symptoms and notes for your next visit."},
-    {"filename": "2_Medication_Log.pdf", "title": "Medication Log", "category": "Medications", "desc": "Track daily dosages and frequencies."},
-    {"filename": "3_Medicare_Worksheet.pdf", "title": "Medicare Comparison", "category": "Insurance", "desc": "Compare plan costs and coverage details."},
-    {"filename": "4_Emergency_Wallet_Card.pdf", "title": "Emergency Card", "category": "Emergency", "desc": "A foldable pocket card for vital information."},
-    {"filename": "5_Specialist_Referral_Checklist.pdf", "title": "Specialist Checklist", "category": "Appointments", "desc": "Prepare specifically for specialist consultations."},
-    {"filename": "6_Hospital_Discharge_Checklist.pdf", "title": "Discharge Checklist", "category": "Recovery", "desc": "Ensure a safe and organized transition home."},
+# The list of files you expect to see
+filenames = [
+    "1_Doctor_Visit_Prep.pdf", 
+    "2_Medication_Log.pdf", 
+    "3_Medicare_Worksheet.pdf", 
+    "4_Emergency_Wallet_Card.pdf", 
+    "5_Specialist_Referral_Checklist.pdf", 
+    "6_Hospital_Discharge_Checklist.pdf"
 ]
 
-# Sidebar Filters
-st.sidebar.header("Filter Resources")
-all_categories = ["All"] + sorted(list(set(doc["category"] for doc in documents)))
-selected_category = st.sidebar.selectbox("Select a Category", all_categories)
+# SEARCH FOR FILES: This helps us find them if they are in a subfolder
+base_path = os.path.dirname(__file__)
+found_path = None
 
-# Filter the list
-if selected_category == "All":
-    filtered_docs = documents
-else:
-    filtered_docs = [doc for doc in documents if doc["category"] == selected_category]
+# Check main folder and common subfolders
+for folder in [base_path, os.path.join(base_path, "pdfs"), os.path.join(base_path, "docs")]:
+    if os.path.exists(os.path.join(folder, filenames[0])):
+        found_path = folder
+        break
 
-# Layout
-PDF_DIR = os.path.dirname(__file__)
 st.divider()
-
 col1, col2 = st.columns(2)
 
-for index, doc in enumerate(filtered_docs):
+for index, fname in enumerate(filenames):
     col = col1 if index % 2 == 0 else col2
-    file_path = os.path.join(PDF_DIR, doc["filename"])
-
+    
     with col:
-        st.subheader(doc['title'])
-        st.info(f"Category: {doc['category']}")
-        st.write(doc["desc"])
+        st.subheader(fname.replace("_", " ").replace(".pdf", ""))
         
-        if os.path.exists(file_path):
+        # Try to read the file from the path we found
+        if found_path:
+            file_path = os.path.join(found_path, fname)
             with open(file_path, "rb") as f:
-                btn_data = f.read()
-            
-            st.download_button(
-                label=f"📥 Download {doc['title']}",
-                data=btn_data,
-                file_name=doc["filename"],
-                mime="application/pdf",
-                key=f"dl_{doc['filename']}"
-            )
+                st.download_button(
+                    label=f"📥 Download {fname}",
+                    data=f.read(),
+                    file_name=fname,
+                    mime="application/pdf",
+                    key=f"dl_{index}"
+                )
         else:
-            st.error(f"⚠️ File '{doc['filename']}' not found on server.")
-        
+            # If we still can't find it, show exactly where the app is looking
+            st.error(f"⚠️ Cannot find {fname}. Current folder contains: {os.listdir(base_path)}")
+
         st.write("---")
