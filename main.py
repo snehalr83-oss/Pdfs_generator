@@ -14,7 +14,8 @@ st.write(
     "Easily search, preview information, and download printable healthcare worksheets and checklists."
 )
 
-PDF_DIR = os.path.join(os.path.dirname(__file__), "pdfs")
+# Set PDF directory to the root folder (where your script and PDFs are)
+PDF_DIR = os.path.dirname(__file__)
 
 # Document Database with Categories
 documents = [
@@ -56,7 +57,7 @@ documents = [
     },
 ]
 
-# Sidebar Controls (Option 2 Enhancements)
+# Sidebar Controls
 st.sidebar.header("🔍 Filter & Search")
 
 # Search Bar
@@ -65,9 +66,7 @@ search_term = st.sidebar.text_input(
 )
 
 # Category Filter
-categories = ["All"] + sorted(
-    list(set(doc["category"] for doc in documents))
-)
+categories = ["All"] + sorted(list(set(doc["category"] for doc in documents)))
 selected_category = st.sidebar.selectbox("Filter by Category:", categories)
 
 # Apply Filtering Logic
@@ -96,11 +95,12 @@ else:
 
     for index, doc in enumerate(filtered_docs):
         col = col1 if index % 2 == 0 else col2
+        # Looks for the PDF in the same folder as this script
         file_path = os.path.join(PDF_DIR, doc["filename"])
 
         with col:
             st.markdown(f"### {doc['title']}")
-            st.badge(f"📁 {doc['category']}")
+            st.write(f"📁 **{doc['category']}**")
             st.write(doc["desc"])
 
             if os.path.exists(file_path):
@@ -116,3 +116,4 @@ else:
                 st.error(f"File missing: {doc['filename']}")
 
             st.write("---")
+    
